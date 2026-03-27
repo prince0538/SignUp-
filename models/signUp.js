@@ -27,9 +27,9 @@ const signUpShema = new mongoose .Schema({
         type: String,
         trim: true,
         default: () => {
-            return Math.round(Math.random() * 1e6)
+            return Math.round(Math.random() * 1e4)
             .toString()
-            .padStart(6, '0');
+            .padStart(4, '0');
         },
     },
     profilePicture: {

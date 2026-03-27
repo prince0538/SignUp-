@@ -58,7 +58,7 @@ exports.updatesignUp = async(req, res) => {
         }, {new: true})
 
         res.status(200).json({
-            message: 'SignUp updated successfully',
+            message: 'Updated successfully',
             data: updatesignUp
         })
 
