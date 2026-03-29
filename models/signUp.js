@@ -32,6 +32,12 @@ const signUpShema = new mongoose .Schema({
             .padStart(4, '0');
         },
     },
+    otpExpires: {
+        type: Date,
+        default: () => {
+            return Date.now() + (1000 * 60 * 30)
+        }
+    },
     profilePicture: {
         secureUrl: {
             type: String,
