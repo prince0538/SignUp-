@@ -5,8 +5,10 @@ const express = require('express');
 const app = express()
 const PORT = process.env.PORT || 4000
 const signUpRouter = require('./router/signUp');
+const groupRouter = require('./router/group')
 app.use(express.json())
 app.use(signUpRouter)
+app.use(groupRouter)
 
 app.use('/', (req, res) => {
     res.send('Hello world')
