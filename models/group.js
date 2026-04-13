@@ -11,6 +11,10 @@ const groupSchema = new mongoose .Schema({
         ref: 'userInfo',
         required: true
     },
+    members: [{
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'userInfo'
+    }],
     contributionAmount: {
         type: String,
         required: true,

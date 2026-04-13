@@ -3,7 +3,7 @@ const cloudinary = require('../middlewares/cloudinary');
 const fs = require('fs');
 const bcrypt = require('bcrypt')
 const {brevo} = require('../utils/brevo')
-const emailTemplate = require('../email')
+const {emailTemplate, resetPasswordTemplate, resetPasswordSuccessfulTemplate } = require('../email')
 const jwt = require('jsonwebtoken')
 
 
@@ -11,7 +11,9 @@ exports.signUp = async(req, res) => {
     try {
 
         const { Name, EmailAddress, PhoneNumber, Password } = req.body
+        console.log(req.body)
         const signUp = await signUpModel.findOne({EmailAddress})
+        console.log(signUp)
         if(signUp){
             return res.status(400).json({
                 message: 'User already exists'
@@ -141,5 +143,88 @@ exports.login = async(req, res) => {
         res.status(500).json({
             message: 'Something went wrong'
         })
+    }
+}
+
+exports.forgetPassword = async(req, res) => {
+    try {
+        // extract the user email from the request body
+        const { EmailAddress } = req.body
+        // find user
+        const signUp = await signUpModel.findOne({EmailAddress: EmailAddress.toLowerCase() });
+        // check if user exits
+        if(signUp === null){
+            return res.status(404).json({
+                message: 'Invalid credentials'
+            })
+        }
+        // generate otp
+        const otp = Math.round(Math.random() * 1e4)
+        .toString()
+        .padStart(4, '0');
+
+        signUp.otp = otp
+        signUp.otpExpires = Date.now() + ((1000 * 60 * 30));
+        const data = {
+            name: signUp.Name,
+            otp: otp
+        }
+        brevo(signUp.EmailAddress, signUp.Name, resetPasswordTemplate(data))
+        await signUp.save()
+        res.status(200).json({
+            message: 'OTP sent successfully'
+        })
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({
+            message: 'Something went wrong'
+        })
+    }
+}
+
+exports.resetPassword = async(req, res) => {
+    try {
+        const { otp, Password, EmailAddress } = req.body;
+        const signUp = await signUpModel.findOne({ EmailAddress: EmailAddress.toLowerCase() });
+
+        if(signUp == null) {
+            return res.status(404).json({
+                message: 'Invaild credentials'
+            })
+        }
+        console.log(Date.now() > signUp.otpExpires)
+        
+        console.log(signUp.otp)
+
+        if(Date.now() > signUp.otpExpires || otp !== signUp.otp) {
+            return res.status(400).json({
+                message: 'Invalid OTP'
+            })
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashPassword = await bcrypt.hash(Password, salt);
+        signUp.Password = hashPassword
+        await signUp.save();
+        brevo(signUp.EmailAddress, signUp.Name, resetPasswordSuccessfulTemplate(signUp.Name))
+        res.status(200).json({
+            message: 'Password reset successful'
+        })
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({
+            message: 'Something went wrong'
+        })
+    }
+}
+
+exports.changePassword = async(req, res) => {
+    try {
+        
+    } catch (error) {
+       console.log(error.message) 
+       res.status(500).json({
+        message: 'Something went wrong'
+       })
     }
 }
