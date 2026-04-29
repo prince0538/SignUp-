@@ -220,11 +220,97 @@ exports.resetPassword = async(req, res) => {
 
 exports.changePassword = async(req, res) => {
     try {
-        
+        const { id } = req.signUp;
+
+        const { oldPassword, newPassword } = req.body;
+
+        const user = await userModel.findById(id);
+
+        if(!signUp) {
+            return res.status(400).json({
+                message: 'User not found'
+            })
+        }
+
+        const checkPassword = await bcrypt.compare(oldPassword, user.password);
+        if(!checkPassword) {
+            return res.status(400).json({
+                message: 'Old password isinvalid'
+            })
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt)
+
+        user.password = hashedPassword;
+        await user.save()
+
+        res.status(200).json({
+            message: 'Password changed successfully'
+        })
+
+
     } catch (error) {
-       console.log(error.message) 
-       res.status(500).json({
-        message: 'Something went wrong'
-       })
+        console.log(error.message)
+        res.status(500).json({
+            message: 'Something went wrong'
+        })
+    }
+}
+
+exports.loginWithGoogle = async (req, res) => {
+    try {
+        // console.log('User', req.user)
+        const token = await jwt.sign({id: req.signUp._id, role: req.signUp.role}, process.env.JWT_SECRET, { expiresIn: '1d'});
+
+        res.status(200).json({
+            message: 'Login successfully',
+            data: req.signUp.fullName,
+            token
+        })
+    } catch (error) {
+        console.log(error.message)
+        res.status(500).json({
+            message: 'Something went wrong'
+        })
+    }
+}
+
+exports.getAllUser = async (req, res) => {
+    try {
+        const signUp = await signUpModel.find()
+
+        res.status(200).json({
+            message: 'All users retrieved successfully',
+            data: user
+        })
+    } catch (error) {
+        console.log(error.message)
+         res.status(500).json({
+            message: 'Something went wrong'
+        })
+    }
+}
+
+exports.deleteUser = async (req, res) => {
+    try {
+        
+        const { id } = req.params
+        const signUp = await signUpModel.findByIdAndDelete(id);
+        if (!signUp) {
+            return res.status(404).json({
+                message: 'User not found'
+            })
+        }
+
+        res.status(200).json({
+            message: 'User deleted successfully',
+            data: users
+        })
+    } catch (error) {
+        console.log(error.message)
+         res.status(500).json({
+            message: 'Something went wrong'
+        })
     }
 }

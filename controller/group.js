@@ -3,7 +3,7 @@ const groupModel = require('../models/group');
 exports.createGroup = async(req, res) => {
     
     try {
-        // console.log(req.signUp.id)
+        
         const { groupName, contributionAmount, contributionFrequency, payoutAmount, describeGroup, TotalMembers} = req.body;
         const newGroup = await groupModel.create({
             groupName,
@@ -28,12 +28,13 @@ exports.createGroup = async(req, res) => {
     }
 }
 
-exports.getAll = async(req, res) => {
+exports.getAllGroup = async (req, res) => {
     try {
-        const allGroups = await groupModel.find().populate('members', 'fullname');
+        const group = await groupModel.find().populate('members', 'fullName').sort({ createdAt: -1 });
+
         res.status(200).json({
-            message: 'Groups retrieved successfully',
-            data: allGroups
+            message: 'All groups retrieved successfully',
+            data: group
         })
     } catch (error) {
         console.log(error.message)
@@ -43,19 +44,43 @@ exports.getAll = async(req, res) => {
     }
 }
 
-exports.getOneGroup = async(req, res) => {
+exports.removeMemberFromGroup = async (req, res) => {
     try {
-        const group = await groupModel.findById(req.params.id).populate('Name', 'members', 'describeGroup');
-        if(!group) {
+        const { id } = req.signUp;
+        const { groupId, memberId } = req.params;
+
+        const group = await groupModel.findById(groupId);
+        if (!group) {
             return res.status(404).json({
                 message: 'Group not found'
             })
         }
-        res.status(200).json({
-            message: 'Group retrieved successfully',
-            data: group
-        })
 
+        if (group.createdBy.toString() !== id) {
+            return res.status(403).json({
+                message: 'Unauthorized: Not an admin'
+            })
+        }
+
+        if(group.createdBy.toString() === memberId) {
+            return res.status(403).json({
+                message: 'Unauthorized Access, Cannot remove admin'
+            })
+        }
+
+        const memberIndex = group.members.findIndex((element) => element.toString() === memberId);
+        if(memberIndex === -1) {
+            return res.status(404).json({
+                message: 'Member not found in the group'
+            })
+        }
+
+        group.members.splice(memberIndex, 1);
+        await group.save();
+
+        res.status(200).json({
+            message: 'Member removed successfully'
+        })
     } catch (error) {
         console.log(error.message)
         res.status(500).json({

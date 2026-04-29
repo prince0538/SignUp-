@@ -1,9 +1,9 @@
 const router = require('express').Router();
-const { createGroup, getAll, getOneGroup } = require('../controller/group');
+const { createGroup, getAllGroup, removeMemberFromGroup } = require('../controller/group');
 const { authentication } = require('../middlewares/auth');
 
-router.post('/create-group', authentication, createGroup);
-router.get('/all-groups', authentication, getAll);
-router.get('/group/:id', authentication, getOneGroup);
+router.post('/', authentication, createGroup);
+router.get('/', getAllGroup);
+router.delete('/:groupId/:memberId', authentication, removeMemberFromGroup);
 
 module.exports = router;
