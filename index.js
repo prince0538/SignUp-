@@ -10,6 +10,7 @@ const signUpRouter = require('./router/signUp');
 const groupRouter = require('./router/group');
 const requestRouter = require('./router/request');
 const paymentRouter = require('./router/payment');
+const orderRouter = require('./router/order');
 
 app.use(express.json())
 
@@ -26,6 +27,7 @@ app.use('/api/v1',signUpRouter)
 app.use('/api/v1/group',groupRouter)
 app.use('/api/v1/request',requestRouter)
 app.use('/api/v1/payment',paymentRouter)
+app.use('/api/v1/order',orderRouter)
 
 app.use((req, res) => {
     res.status(404).json({
